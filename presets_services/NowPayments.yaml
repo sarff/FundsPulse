@@ -1,0 +1,14 @@
+services:
+  - name: "NowPayments"
+    currency_symbol: "Crypto"
+    history_file: "nowpayments.json"
+    request:
+      method: GET
+      url: "https://api.nowpayments.io/v1/balance/"
+      headers:
+        x-api-key: "${NOWPAYMENTS_API_KEY}"
+    response:
+      balance_path: "@withKey.@values.#.amount"
+      balance_scale: 1
+      currency_field: "@keys"
+      multiple: true

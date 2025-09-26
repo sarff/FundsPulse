@@ -1,0 +1,13 @@
+services:
+- name: "Clickatell"
+  currency_symbol: "€"
+  history_file: "clickatell.json"
+  request:
+    method: GET
+    url: "https://platform.clickatell.com/v1/balance"
+    headers:
+      Authorization: "${CLICKATELL_API_KEY}"
+  response:
+    balance_path: "balance"
+    balance_scale: 1
+    currency_field: "currency"

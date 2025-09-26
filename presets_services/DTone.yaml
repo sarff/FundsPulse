@@ -1,0 +1,13 @@
+services:
+- name: "DT Shop (DT One)"
+  currency_symbol: "€"
+  history_file: "dtshop.json"
+  request:
+    method: GET
+    url: "https://dvs-api.dtone.com/v1/balances"
+    headers:
+      Authorization: "Basic ${DTONE_API_KEY}"
+  response:
+    balance_path: "0.available"
+    balance_scale: 1
+    currency_field: "0.unit"

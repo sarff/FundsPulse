@@ -1,0 +1,79 @@
+# Global settings
+days_for_avg: 7
+minimum_days_left: 3
+history_dir: data
+
+schedule:
+  time: "20:47"
+  timezone: "Europe/Kyiv"
+
+telegram:
+  token: "YOUR_TELEGRAM_BOT_TOKEN"
+  chat_ids:
+    - 123456789
+    - 987654321
+
+services:
+  - name: "DT Shop (DT One)"
+    currency_symbol: "€"
+    history_file: "dtshop.json"
+    request:
+      method: GET
+      url: "https://dvs-api.dtone.com/v1/balances"
+      headers:
+        Authorization: "Basic ${DTONE_API_KEY}"
+    response:
+      balance_path: "0.available"
+      balance_scale: 1
+      currency_field: "0.unit"
+
+  - name: "Clickatell"
+    currency_symbol: "€"
+    history_file: "clickatell.json"
+    request:
+      method: GET
+      url: "https://platform.clickatell.com/v1/balance"
+      headers:
+        Authorization: "${CLICKATELL_API_KEY}"
+    response:
+      balance_path: "balance"
+      balance_scale: 1
+      currency_field: "currency"
+
+  # Example service returning multiple balances and currencies per request - see  "multiple: true"
+  - name: "NowPayments"
+    currency_symbol: "Crypto"
+    history_file: "nowpayments.json"
+    request:
+      method: GET
+      url: "https://api.nowpayments.io/v1/balance/"
+      headers:
+        x-api-key: "${NOWPAYMENTS_API_KEY}"
+    response:
+      balance_path: "@withKey.@values.#.amount"
+      balance_scale: 1
+      currency_field: "@keys"
+      multiple: true
+
+  # Example with receive toker for second request
+  - name: "SomeService"
+    currency_symbol: "$"
+    history_file: "someservice.json"
+    auth:
+      request:
+        method: POST
+        url: "https://api.EXAMPLE.io/v1/auth"
+        headers:
+          Content-Type: "application/json"
+        body:
+          email: "${EXAMPLE_EMAIL}"
+          password: "${EXAMPLE_PASSWORD}"
+      token_path: "token"
+      header: "Authorization"
+      prefix: "Bearer "
+    request:
+      method: GET
+      url: "https://api.EXAMPLE.io/v1/sub-partner?offset=0&limit=10"
+    response:
+      balance_path: "result.#.balance"
+      balance_scale: 1
