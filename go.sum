@@ -27,8 +27,6 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/reugn/go-quartz v0.15.2 h1:IQUnwTtNURVtdcwH4CJhFH3dXAUwP2fXZaNjPp+sJAY=
 github.com/reugn/go-quartz v0.15.2/go.mod h1:00DVnBKq2Fxag/HlR9mGXjmHNlMFQ1n/LNM+Fn0jUaE=
-github.com/sarff/gjson v0.0.0-20250925201410-7af2576fb24f h1:JzvqpWVLrAOWd7rf18yuqt0MoH+HfSoLKIWiLVsKGyk=
-github.com/sarff/gjson v0.0.0-20250925201410-7af2576fb24f/go.mod h1:J96sSKaveWsk7QlPVE02Y8lTWYMGFsO0KDD8lpo5ChQ=
 github.com/sarff/gjson v0.0.0-20250926063853-d6d8f540c6ea h1:XF0EsGFn6XRKdD8JaYRa5SGLERF1AY/GZmLZncy7zJQ=
 github.com/sarff/gjson v0.0.0-20250926063853-d6d8f540c6ea/go.mod h1:J96sSKaveWsk7QlPVE02Y8lTWYMGFsO0KDD8lpo5ChQ=
 github.com/sarff/iSlogger v1.0.4 h1:zZRgshnCmVr3VihIn8VLxEEcRFJA7mwrKWEXEMtG1/4=

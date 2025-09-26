@@ -7,6 +7,7 @@ Go utility that polls multiple provider APIs, stores daily spending history per 
 - Daily scheduler powered by go-quartz with timezone support.
 - History writer that keeps the last _N_ days of spend per provider in JSON files (no database required).
 - Telegram notifications using telego, with configurable chat recipients.
+![img.png](img.png)
 - Structured logging via iSlogger.
 
 ## Configuration
