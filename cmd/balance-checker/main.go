@@ -24,22 +24,23 @@ func main() {
 	runOnce := flag.Bool("run-once", false, "Run balance check immediately and exit")
 	flag.Parse()
 
-	if err := godotenv.Load(".env"); err != nil {
-		if !errors.Is(err, os.ErrNotExist) {
-			log.Printf("load .env: %v", err)
-		}
-	}
-
-	cfg, err := config.Load(*configPath)
-	if err != nil {
-		log.Fatalf("load config: %v", err)
-	}
-
 	logger, err := iSlogger.New(iSlogger.DefaultConfig().WithAppName("FundsPulse"))
 	if err != nil {
 		log.Fatalf("init logger: %v", err)
 	}
 	defer logger.Close()
+
+	if err = godotenv.Load(".env"); err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			logger.Info("loading .env file", "error", err)
+		}
+	}
+
+	cfg, err := config.Load(*configPath)
+	if err != nil {
+		logger.Error("load config", "error", err)
+		os.Exit(1)
+	}
 
 	notifier, err := notify.NewTelegram(cfg.Telegram.Token)
 	if err != nil {
