@@ -13,12 +13,13 @@ import (
 
 // Config models the application configuration file.
 type Config struct {
-	DaysForAverage  int             `yaml:"days_for_avg"`
-	Schedule        ScheduleConfig  `yaml:"schedule"`
-	MinimumDaysLeft float64         `yaml:"minimum_days_left"`
-	HistoryDir      string          `yaml:"history_dir"`
-	Telegram        TelegramConfig  `yaml:"telegram"`
-	Services        []ServiceConfig `yaml:"services"`
+	DaysForAverage  int                   `yaml:"days_for_avg"`
+	Schedule        ScheduleConfig        `yaml:"schedule"`
+	MinimumDaysLeft float64               `yaml:"minimum_days_left"`
+	HistoryDir      string                `yaml:"history_dir"`
+	Telegram        TelegramConfig        `yaml:"telegram"`
+	Services        []ServiceConfig       `yaml:"services"`
+	StaticServices  []StaticServiceConfig `yaml:"static_services"`
 }
 
 // ScheduleConfig keeps daily trigger settings.
@@ -41,6 +42,17 @@ type ServiceConfig struct {
 	Auth           *AuthConfig    `yaml:"auth"`
 	Request        RequestConfig  `yaml:"request"`
 	Response       ResponseConfig `yaml:"response"`
+}
+
+// StaticServiceConfig describes a fixed monthly payment reminder.
+type StaticServiceConfig struct {
+	Name             string  `yaml:"name"`
+	CurrencySymbol   string  `yaml:"currency_symbol"`
+	Amount           float64 `yaml:"amount"`
+	BillingDay       int     `yaml:"billing_day"`
+	NotifyBeforeDays int     `yaml:"notify_before_days"`
+	URLPay           string  `yaml:"url_pay"`
+	CardPay          string  `yaml:"card_pay"`
 }
 
 // AuthConfig specifies optional pre-request authentication flow.
@@ -101,13 +113,20 @@ func Load(path string) (*Config, error) {
 		return nil, errors.New("at least one telegram chat id is required")
 	}
 
-	if len(cfg.Services) == 0 {
+	if len(cfg.Services) == 0 && len(cfg.StaticServices) == 0 {
 		return nil, errors.New("services list cannot be empty")
 	}
 
 	for i := range cfg.Services {
 		svc := &cfg.Services[i]
 		if err := svc.applyDefaults(cfg.HistoryDir); err != nil {
+			return nil, err
+		}
+	}
+
+	for i := range cfg.StaticServices {
+		svc := &cfg.StaticServices[i]
+		if err := svc.validate(); err != nil {
 			return nil, err
 		}
 	}
@@ -196,4 +215,20 @@ func sanitizeFileName(input string) string {
 		}
 	}
 	return strings.Trim(builder.String(), "_")
+}
+
+func (s *StaticServiceConfig) validate() error {
+	if strings.TrimSpace(s.Name) == "" {
+		return errors.New("static service name is required")
+	}
+	if s.Amount <= 0 {
+		return fmt.Errorf("static service %q: amount must be positive", s.Name)
+	}
+	if s.BillingDay < 1 || s.BillingDay > 31 {
+		return fmt.Errorf("static service %q: billing_day must be between 1 and 31", s.Name)
+	}
+	if s.NotifyBeforeDays < 0 {
+		return fmt.Errorf("static service %q: notify_before_days must be >= 0", s.Name)
+	}
+	return nil
 }

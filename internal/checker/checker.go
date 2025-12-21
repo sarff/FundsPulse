@@ -122,6 +122,19 @@ func (c *Checker) RunOnce(ctx context.Context) error {
 		}
 	}
 
+	for _, svc := range c.cfg.StaticServices {
+		message, ok := c.processStaticService(svc, now)
+		if !ok {
+			continue
+		}
+		if err := c.notifier.Notify(ctx, c.cfg.Telegram.ChatIDs, message); err != nil {
+			c.logger.Error("Failed to notify", "service", svc.Name, "error", err)
+			if firstErr == nil {
+				firstErr = err
+			}
+		}
+	}
+
 	return firstErr
 }
 
@@ -182,6 +195,17 @@ func (c *Checker) processService(ctx context.Context, svc config.ServiceConfig, 
 	return message, nil
 }
 
+func (c *Checker) processStaticService(svc config.StaticServiceConfig, now time.Time) (string, bool) {
+	kind, ok := staticServiceNoticeKind(svc, now)
+	if !ok {
+		return "", false
+	}
+
+	message := composeStaticMessage(svc, kind)
+	c.logger.Info("Static service reminder", "service", svc.Name, "kind", kind)
+	return message, true
+}
+
 func composeMessage(serviceName string, entries []balanceReport) string {
 	var builder strings.Builder
 	overallWarn := false
@@ -229,6 +253,44 @@ func formatDays(days float64) string {
 		return "n/a"
 	}
 	return fmt.Sprintf("%.1f days", days)
+}
+
+func staticServiceNoticeKind(svc config.StaticServiceConfig, now time.Time) (string, bool) {
+	today := now.Day()
+	if today == svc.BillingDay {
+		return "Payment due today", true
+	}
+
+	if svc.NotifyBeforeDays <= 0 {
+		return "", false
+	}
+
+	notifyDay := svc.BillingDay - svc.NotifyBeforeDays
+	if notifyDay < 0 {
+		notifyDay += 30
+	}
+
+	if notifyDay > 0 && today == notifyDay {
+		return fmt.Sprintf("Payment reminder (%d days left)", svc.NotifyBeforeDays), true
+	}
+
+	return "", false
+}
+
+func composeStaticMessage(svc config.StaticServiceConfig, kind string) string {
+	var builder strings.Builder
+	builder.WriteString(kind)
+	builder.WriteString("\n")
+	builder.WriteString(fmt.Sprintf("Service: %s\n", svc.Name))
+	builder.WriteString(fmt.Sprintf("Amount: %s\n", formatAmount(svc.Amount, svc.CurrencySymbol)))
+	builder.WriteString(fmt.Sprintf("Billing day: %d\n", svc.BillingDay))
+	if strings.TrimSpace(svc.URLPay) != "" {
+		builder.WriteString(fmt.Sprintf("Pay URL: %s\n", svc.URLPay))
+	}
+	if strings.TrimSpace(svc.CardPay) != "" {
+		builder.WriteString(fmt.Sprintf("Card: %s\n", svc.CardPay))
+	}
+	return strings.TrimSpace(builder.String())
 }
 
 func historyPathForEntry(base string, index int, currency string) string {

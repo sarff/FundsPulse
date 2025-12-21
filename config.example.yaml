@@ -77,3 +77,12 @@ services:
     response:
       balance_path: "result.#.balance"
       balance_scale: 1
+
+static_services:
+  - name: "VPS_Server"
+    currency_symbol: "USD"
+    amount: 49
+    billing_day: 10
+    notify_before_days: 3
+    url_pay: "https://cp.example.com/en/orders"
+    card_pay: "**** 1111"

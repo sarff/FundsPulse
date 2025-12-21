@@ -16,8 +16,8 @@ Thank you for your interest in contributing to FundsPulse! This document provide
 1. Ensure you have Go 1.24+ installed
 2. Clone the repository:
    ```bash
-   git clone https://github.com/sarff/multiapibalancechecker.git
-   cd multiapibalancechecker
+   git clone https://github.com/sarff/FundsPulse.git
+   cd FundsPulse
    ```
 3. Copy configuration files:
    ```bash
