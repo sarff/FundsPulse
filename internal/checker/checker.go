@@ -165,11 +165,14 @@ func (c *Checker) processService(ctx context.Context, svc config.ServiceConfig, 
 
 		avg := stats.Average
 		daysLeft := math.Inf(1)
-		if avg > 0 {
-			daysLeft = entry.Amount / avg
-		}
+		warn := false
 
-		warn := daysLeft != math.Inf(1) && daysLeft < c.cfg.MinimumDaysLeft
+		if svc.BillingMode != "postpaid" {
+			if avg > 0 {
+				daysLeft = entry.Amount / avg
+			}
+			warn = daysLeft != math.Inf(1) && daysLeft < c.cfg.MinimumDaysLeft
+		}
 
 		reports = append(reports, balanceReport{
 			Currency: currency,
@@ -190,7 +193,7 @@ func (c *Checker) processService(ctx context.Context, svc config.ServiceConfig, 
 		)
 	}
 
-	message := composeMessage(svc.Name, reports)
+	message := composeMessage(svc.Name, svc.BillingMode, reports)
 	c.logger.Info("Service check complete", "service", svc.Name, "entries", len(reports))
 	return message, nil
 }
@@ -206,33 +209,39 @@ func (c *Checker) processStaticService(svc config.StaticServiceConfig, now time.
 	return message, true
 }
 
-func composeMessage(serviceName string, entries []balanceReport) string {
+func composeMessage(serviceName, billingMode string, entries []balanceReport) string {
 	var builder strings.Builder
 	overallWarn := false
+	label := "Balance"
+	if billingMode == "postpaid" {
+		label = "Debt"
+	}
 
 	for i, entry := range entries {
 		if entry.Warn {
 			overallWarn = true
 		}
 
-		builder.WriteString(fmt.Sprintf("%s: %s\n", "Balance", formatAmount(entry.Balance, entry.Currency)))
+		suffix := ""
+		if overallWarn {
+			suffix = " !!!"
+		}
+
+		builder.WriteString(fmt.Sprintf("Service: %s%s\n\n", serviceName, suffix))
+
+		if billingMode == "postpaid" {
+			entry.Balance = -entry.Balance
+		}
+		builder.WriteString(fmt.Sprintf("%s: %s\n", label, formatAmount(entry.Balance, entry.Currency)))
 		builder.WriteString(fmt.Sprintf("📉 Avg daily: %f\n", entry.Average))
-		builder.WriteString(fmt.Sprintf("📆 Enough for: %s", formatDays(entry.DaysLeft)))
+		if billingMode != "postpaid" {
+			builder.WriteString(fmt.Sprintf("📆 Enough for: %s", formatDays(entry.DaysLeft)))
+		}
 		if i < len(entries)-1 {
 			builder.WriteString("\n\n")
 		}
 	}
 
-	suffix := ""
-	if overallWarn {
-		suffix = " !!!"
-	}
-
-	if builder.Len() > 0 {
-		builder.WriteString("\n")
-	}
-
-	builder.WriteString(fmt.Sprintf("Service: %s%s", serviceName, suffix))
 	return builder.String()
 }
 

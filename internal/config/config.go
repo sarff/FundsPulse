@@ -39,6 +39,7 @@ type ServiceConfig struct {
 	Name           string         `yaml:"name"`
 	HistoryFile    string         `yaml:"history_file"`
 	CurrencySymbol string         `yaml:"currency_symbol"`
+	BillingMode    string         `yaml:"billing_mode"`
 	Auth           *AuthConfig    `yaml:"auth"`
 	Request        RequestConfig  `yaml:"request"`
 	Response       ResponseConfig `yaml:"response"`
@@ -168,6 +169,18 @@ func (s *ServiceConfig) applyDefaults(historyDir string) error {
 
 	if s.Request.Method == "" {
 		s.Request.Method = "GET"
+	}
+
+	if strings.TrimSpace(s.BillingMode) == "" {
+		s.BillingMode = "prepaid"
+	} else {
+		s.BillingMode = strings.ToLower(strings.TrimSpace(s.BillingMode))
+	}
+
+	switch s.BillingMode {
+	case "prepaid", "postpaid":
+	default:
+		return fmt.Errorf("service %q: billing_mode must be prepaid or postpaid", s.Name)
 	}
 
 	if strings.TrimSpace(s.Request.URL) == "" {

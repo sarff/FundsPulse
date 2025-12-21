@@ -17,6 +17,7 @@ services:
   - name: "DT Shop (DT One)"
     currency_symbol: "€"
     history_file: "dtshop.json"
+    billing_mode: "prepaid"
     request:
       method: GET
       url: "https://dvs-api.dtone.com/v1/balances"
@@ -30,6 +31,7 @@ services:
   - name: "Clickatell"
     currency_symbol: "€"
     history_file: "clickatell.json"
+    billing_mode: "prepaid"
     request:
       method: GET
       url: "https://platform.clickatell.com/v1/balance"
@@ -44,6 +46,7 @@ services:
   - name: "NowPayments"
     currency_symbol: "Crypto"
     history_file: "nowpayments.json"
+    billing_mode: "prepaid"
     request:
       method: GET
       url: "https://api.nowpayments.io/v1/balance/"
@@ -59,6 +62,7 @@ services:
   - name: "SomeService"
     currency_symbol: "$"
     history_file: "someservice.json"
+    billing_mode: "prepaid"
     auth:
       request:
         method: POST
