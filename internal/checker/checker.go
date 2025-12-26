@@ -267,7 +267,7 @@ func formatDays(days float64) string {
 func staticServiceNoticeKind(svc config.StaticServiceConfig, now time.Time) (string, bool) {
 	today := now.Day()
 	if today == svc.BillingDay {
-		return "Payment due today", true
+		return "🔥 Payment due today 🔥", true
 	}
 
 	if svc.NotifyBeforeDays <= 0 {
@@ -280,7 +280,7 @@ func staticServiceNoticeKind(svc config.StaticServiceConfig, now time.Time) (str
 	}
 
 	if notifyDay > 0 && today == notifyDay {
-		return fmt.Sprintf("Payment reminder (%d days left)", svc.NotifyBeforeDays), true
+		return fmt.Sprintf("⏰️️️️️️️Payment reminder (📌%d days left)", svc.NotifyBeforeDays), true
 	}
 
 	return "", false
@@ -294,10 +294,10 @@ func composeStaticMessage(svc config.StaticServiceConfig, kind string) string {
 	builder.WriteString(fmt.Sprintf("Amount: %s\n", formatAmount(svc.Amount, svc.CurrencySymbol)))
 	builder.WriteString(fmt.Sprintf("Billing day: %d\n", svc.BillingDay))
 	if strings.TrimSpace(svc.URLPay) != "" {
-		builder.WriteString(fmt.Sprintf("Pay URL: %s\n", svc.URLPay))
+		builder.WriteString(fmt.Sprintf("🔗Pay URL: %s\n", svc.URLPay))
 	}
 	if strings.TrimSpace(svc.CardPay) != "" {
-		builder.WriteString(fmt.Sprintf("Card: %s\n", svc.CardPay))
+		builder.WriteString(fmt.Sprintf("💳Card: %s\n", svc.CardPay))
 	}
 	return strings.TrimSpace(builder.String())
 }
