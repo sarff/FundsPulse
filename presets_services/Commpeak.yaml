@@ -1,0 +1,13 @@
+- name: "Commpeak"
+  currency_symbol: "$"
+  history_file: "commpeak.json"
+  billing_mode: "prepaid"
+  request:
+    method: GET
+    url: "https://api.commpeak.com/customer"
+    headers:
+      Authorization: "Bearer ${COMMPEAK_API_KEY}"
+      accept: "application/json"
+  response:
+    balance_path: "customer.balance"
+    balance_scale: 1
