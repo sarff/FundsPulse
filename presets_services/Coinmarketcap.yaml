@@ -1,0 +1,12 @@
+services:
+- name: "Coinmarketcap"
+  currency_symbol: "Credits"
+  history_file: "coinmarket.json"
+  request:
+    method: GET
+    url: "https://pro-api.coinmarketcap.com/v1/key/info"
+    headers:
+      X-CMC_PRO_API_KEY: "${COINMARKET_API_KEY}"
+  response:
+    balance_path: "data.usage.current_month.credits_left"
+    balance_scale: 1
