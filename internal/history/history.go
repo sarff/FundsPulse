@@ -118,9 +118,10 @@ func (m *Manager) save(path string, record Record) error {
 // computeSpend returns positive spend when balance decreases.
 func computeSpend(previous, current float64) float64 {
 	diff := previous - current
-	//if diff < 0 {
-	//	return 0
-	//}
+	// if the diff is negative, set it to 0
+	if diff < 0 {
+		return 0
+	}
 	return diff
 }
 
