@@ -1,3 +1,4 @@
+services:
 - name: "Commpeak"
   currency_symbol: "$"
   history_file: "commpeak.json"

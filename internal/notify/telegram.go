@@ -2,6 +2,7 @@ package notify
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/mymmrac/telego"
@@ -23,14 +24,15 @@ func NewTelegram(token string) (*Telegram, error) {
 
 // Notify sends message to every chat id.
 func (t *Telegram) Notify(ctx context.Context, chatIDs []int64, message string) error {
+	var errs []error
 	for _, chatID := range chatIDs {
 		params := &telego.SendMessageParams{
 			ChatID: telego.ChatID{ID: chatID},
 			Text:   message,
 		}
 		if _, err := t.bot.SendMessage(ctx, params); err != nil {
-			return fmt.Errorf("send message to %d: %v", chatID, err)
+			errs = append(errs, fmt.Errorf("send message to %d: %v", chatID, err))
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }

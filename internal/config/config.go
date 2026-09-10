@@ -102,6 +102,10 @@ func Load(path string) (*Config, error) {
 		cfg.HistoryDir = "data"
 	}
 
+	if cfg.MinimumDaysLeft <= 0 {
+		cfg.MinimumDaysLeft = 3
+	}
+
 	if err := cfg.Schedule.validate(); err != nil {
 		return nil, err
 	}
@@ -196,7 +200,7 @@ func (s *ServiceConfig) applyDefaults(historyDir string) error {
 	}
 
 	if s.HistoryFile == "" {
-		s.HistoryFile = strings.ToLower(sanitizeFileName(s.Name)) + ".json"
+		s.HistoryFile = strings.ToLower(SanitizeName(s.Name)) + ".json"
 	}
 
 	historyDirClean := filepath.Clean(historyDir)
@@ -213,7 +217,8 @@ func (s *ServiceConfig) applyDefaults(historyDir string) error {
 	return nil
 }
 
-func sanitizeFileName(input string) string {
+// SanitizeName strips non-ASCII-alphanumeric characters, lowercases, and trims underscores.
+func SanitizeName(input string) string {
 	var builder strings.Builder
 	for _, r := range input {
 		switch {

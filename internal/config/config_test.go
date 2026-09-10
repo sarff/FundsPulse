@@ -2,7 +2,7 @@ package config
 
 import "testing"
 
-func Test_sanitizeFileName(t *testing.T) {
+func TestSanitizeName(t *testing.T) {
 	type args struct {
 		input string
 	}
@@ -18,8 +18,8 @@ func Test_sanitizeFileName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := sanitizeFileName(tt.args.input); got != tt.want {
-				t.Errorf("sanitizeFileName() = %v, want %v", got, tt.want)
+			if got := SanitizeName(tt.args.input); got != tt.want {
+				t.Errorf("SanitizeName() = %v, want %v", got, tt.want)
 			}
 		})
 	}

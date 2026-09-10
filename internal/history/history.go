@@ -53,7 +53,7 @@ func (m *Manager) Update(path string, balance float64, now time.Time) (Result, e
 	if len(history.DailySpends) == 0 || history.DailySpends[len(history.DailySpends)-1].Date != dayKey {
 		history.DailySpends = append(history.DailySpends, DailySpend{Date: dayKey, Amount: spend})
 	} else {
-		history.DailySpends[len(history.DailySpends)-1].Amount = spend
+		history.DailySpends[len(history.DailySpends)-1].Amount += spend
 	}
 
 	if len(history.DailySpends) > m.days {
@@ -102,6 +102,7 @@ func (m *Manager) save(path string, record Record) error {
 	encoder.SetIndent("", "  ")
 	if err := encoder.Encode(&record); err != nil {
 		file.Close()
+		os.Remove(tmp)
 		return fmt.Errorf("encode history %q: %v", path, err)
 	}
 

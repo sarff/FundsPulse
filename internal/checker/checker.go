@@ -211,28 +211,31 @@ func (c *Checker) processStaticService(svc config.StaticServiceConfig, now time.
 
 func composeMessage(serviceName, billingMode string, entries []balanceReport) string {
 	var builder strings.Builder
-	overallWarn := false
 	label := "Balance"
 	if billingMode == "postpaid" {
 		label = "Debt"
 	}
 
-	for i, entry := range entries {
+	warn := false
+	for _, entry := range entries {
 		if entry.Warn {
-			overallWarn = true
+			warn = true
+			break
 		}
+	}
 
-		suffix := ""
-		if overallWarn {
-			suffix = " !!!"
-		}
+	suffix := ""
+	if warn {
+		suffix = " !!!"
+	}
+	builder.WriteString(fmt.Sprintf("Service: %s%s\n\n", serviceName, suffix))
 
-		builder.WriteString(fmt.Sprintf("Service: %s%s\n\n", serviceName, suffix))
-
+	for i, entry := range entries {
+		displayBalance := entry.Balance
 		if billingMode == "postpaid" {
-			entry.Balance = -entry.Balance
+			displayBalance = -displayBalance
 		}
-		builder.WriteString(fmt.Sprintf("%s: %s\n", label, formatAmount(entry.Balance, entry.Currency)))
+		builder.WriteString(fmt.Sprintf("%s: %s\n", label, formatAmount(displayBalance, entry.Currency)))
 		builder.WriteString(fmt.Sprintf("📉 Avg daily: %f\n", entry.Average))
 		if billingMode != "postpaid" {
 			builder.WriteString(fmt.Sprintf("📆 Enough for: %s", formatDays(entry.DaysLeft)))
@@ -275,11 +278,12 @@ func staticServiceNoticeKind(svc config.StaticServiceConfig, now time.Time) (str
 	}
 
 	notifyDay := svc.BillingDay - svc.NotifyBeforeDays
-	if notifyDay < 0 {
-		notifyDay += 30
+	if notifyDay <= 0 {
+		daysInMonth := time.Date(now.Year(), now.Month()+1, 0, 0, 0, 0, 0, now.Location()).Day()
+		notifyDay += daysInMonth
 	}
 
-	if notifyDay > 0 && today == notifyDay {
+	if today == notifyDay {
 		return fmt.Sprintf("⏰️️️️️️️Payment reminder (📌%d days left)", svc.NotifyBeforeDays), true
 	}
 
@@ -309,7 +313,7 @@ func historyPathForEntry(base string, index int, currency string) string {
 	name := strings.TrimSuffix(filename, ext)
 
 	suffixParts := []string{fmt.Sprintf("%02d", index+1)}
-	if sanitized := sanitizeIdentifier(currency); sanitized != "" {
+	if sanitized := config.SanitizeName(currency); sanitized != "" {
 		suffixParts = append(suffixParts, sanitized)
 	}
 
@@ -318,27 +322,4 @@ func historyPathForEntry(base string, index int, currency string) string {
 		return filepath.Join(dir, fmt.Sprintf("%s_%s%s", name, suffix, ext))
 	}
 	return filepath.Join(dir, fmt.Sprintf("%s_%s", name, suffix))
-}
-
-func sanitizeIdentifier(value string) string {
-	value = strings.TrimSpace(value)
-	if value == "" {
-		return ""
-	}
-
-	var builder strings.Builder
-	for _, r := range value {
-		switch {
-		case r >= 'a' && r <= 'z':
-			builder.WriteRune(r)
-		case r >= 'A' && r <= 'Z':
-			builder.WriteRune(r + 32)
-		case r >= '0' && r <= '9':
-			builder.WriteRune(r)
-		default:
-			builder.WriteRune('_')
-		}
-	}
-
-	return strings.Trim(builder.String(), "_")
 }

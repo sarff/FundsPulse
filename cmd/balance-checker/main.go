@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -20,13 +21,19 @@ import (
 )
 
 func main() {
+	if err := run(); err != nil {
+		log.Fatalf("fatal: %v", err)
+	}
+}
+
+func run() error {
 	configPath := flag.String("config", "config.yaml", "Path to configuration file")
 	runOnce := flag.Bool("run-once", false, "Run balance check immediately and exit")
 	flag.Parse()
 
 	logger, err := iSlogger.New(iSlogger.DefaultConfig().WithAppName("FundsPulse"))
 	if err != nil {
-		log.Fatalf("init logger: %v", err)
+		return fmt.Errorf("init logger: %v", err)
 	}
 	defer logger.Close()
 
@@ -38,14 +45,12 @@ func main() {
 
 	cfg, err := config.Load(*configPath)
 	if err != nil {
-		logger.Error("load config", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("load config: %v", err)
 	}
 
-	notifier, err := notify.NewTelegram(cfg.Telegram.Token)
+	notifier, err := notify.NewTelegram(os.ExpandEnv(cfg.Telegram.Token))
 	if err != nil {
-		logger.Error("init telegram", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("init telegram: %v", err)
 	}
 
 	client := service.NewClient()
@@ -53,27 +58,23 @@ func main() {
 
 	balanceChecker, err := checker.New(cfg, client, historyManager, notifier, logger)
 	if err != nil {
-		logger.Error("init checker", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("init checker: %v", err)
 	}
 
 	if *runOnce {
-		if err := balanceChecker.RunOnce(context.Background()); err != nil {
-			logger.Error("run once failed", "error", err)
-			os.Exit(1)
-		}
-		return
+		return balanceChecker.RunOnce(context.Background())
 	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
 	if err := balanceChecker.Start(ctx); err != nil && !errors.Is(err, context.Canceled) {
-		logger.Error("scheduler stopped with error", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("scheduler stopped: %v", err)
 	}
 
 	if err := logger.Flush(); err != nil {
 		log.Printf("failed to flush logs: %v", err)
 	}
+
+	return nil
 }
